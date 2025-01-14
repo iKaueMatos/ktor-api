@@ -1,0 +1,70 @@
+package com.ecommerce.entities.orders
+
+import com.ecommerce.entities.base.BaseIntEntity
+import com.ecommerce.entities.base.BaseIntEntityClass
+import com.ecommerce.entities.base.BaseIntIdTable
+import com.ecommerce.entities.user.UserTable
+import org.jetbrains.exposed.dao.id.EntityID
+
+object OrdersTable : BaseIntIdTable("orders") {
+    val userId = reference("user_id", UserTable.id)
+    val paymentId = varchar("payment_id", 50).nullable()
+    val paymentType = varchar("payment_type", 50).nullable()
+    val quantity = integer("quantity") // total number of items
+    val subTotal = float("sub_total")
+    val total = float("total")
+    val shippingCharge = float("shopping_charge").clientDefault { 0.0f }
+    val vat = float("vat").nullable()
+    val cancelOrder = bool("cancel_order").clientDefault { false }
+    val coupon = varchar("coupon", 50).nullable()
+    val status = varchar("status", 30).clientDefault { "pending" }
+    val statusCode = integer("status_code").clientDefault { 0 }
+}
+
+class OrderEntity(id: EntityID<String>) : BaseIntEntity(id, OrdersTable) {
+    companion object : BaseIntEntityClass<OrderEntity>(OrdersTable)
+
+    var userId by OrdersTable.userId
+    var paymentId by OrdersTable.paymentId
+    var paymentType by OrdersTable.paymentType
+    var quantity by OrdersTable.quantity
+    var subTotal by OrdersTable.subTotal
+    var total by OrdersTable.total
+    var shippingCharge by OrdersTable.shippingCharge
+    var vat by OrdersTable.vat
+    var cancelOrder by OrdersTable.cancelOrder
+    var coupon by OrdersTable.coupon
+    var status by OrdersTable.status
+    var statusCode by OrdersTable.statusCode
+    fun orderCreatedResponse() = OrderCreatedPayload(id.value)
+    fun response() = OrderPayload(
+        id.value,
+        paymentId,
+        paymentType,
+        quantity,
+        subTotal,
+        total,
+        shippingCharge,
+        vat,
+        cancelOrder,
+        coupon,
+        status,
+        statusCode
+    )
+}
+
+data class OrderCreatedPayload(val orderId: String)
+data class OrderPayload(
+    val orderId: String,
+    val paymentId: String?,
+    val paymentType: String?,
+    val quantity: Int,
+    val subTotal: Float,
+    val total: Float,
+    val shippingCharge: Float,
+    val vat: Float?,
+    val cancelOrder: Boolean,
+    val coupon: String?,
+    val status: String,
+    val statusCode: Int
+)
